@@ -1,0 +1,15 @@
+<h1>Welcome <%= current_user.email %></h1>
+<h2> Here are your accounts <h2>
+
+<% if @accounts.empty? %>
+    <p> No accounts to display. Please create one </p>
+<% else %>
+    <ul>
+        <% @accounts.each do |account| %>
+        <li><%=link_to account.account_number, account%></li>
+        <p>     Current Balance: <%= account.balance %></p>
+        <% end %>
+    </ul>
+<% end %>
+
+<%= link_to 'Create Account', new_account_path%>

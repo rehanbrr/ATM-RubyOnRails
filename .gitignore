@@ -22,6 +22,12 @@
 !/tmp/pids/
 !/tmp/pids/.keep
 
+/config/initializers/*
+/config/locales/*
+/config/credentials.yml.enc
+/app/helpers/*
+/test
+
 # Ignore storage (uploaded files in development and any SQLite databases).
 /storage/*
 !/storage/.keep
