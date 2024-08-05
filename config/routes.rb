@@ -3,6 +3,14 @@ Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   resources :accounts, param: :account_number do
     resources :transactions
+    member do
+      get 'withdraw'
+      post 'withdraw'
+      get 'deposit'
+      post 'deposit'
+      get 'verify_pin'
+      post 'verify_pin'
+    end
   end
 
   root 'home#index'

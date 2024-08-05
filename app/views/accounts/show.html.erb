@@ -1,1 +1,10 @@
-<h1> This is where the account details for <%= @account.account_number %> will show </h1>
+<h1>Account Details</h1>
+<p>Account Number: <%= @account.account_number %></p>
+<p>Balance: <%= @account.balance %></p>
+<p>Status: <%= @account.status %></p>
+
+<%= link_to 'Withdraw', withdraw_account_path(@account) %>
+<br>
+<%= link_to 'Deposit', deposit_account_path(@account) %>
+<br>
+<%= link_to 'Back', accounts_path %>

@@ -1,13 +1,10 @@
 class AccountsController < ApplicationController
+  before_action :set_account, only: [:show, :edit, :update, :destroy, :withdraw, :deposit, :verify_pin]
   def index
     @accounts = current_user.accounts
   end
 
   def show
-    @account = Account.find_by(account_number: params[:account_number])
-    unless @account
-      redirect_to accounts_path, notice: 'Account not found'
-    end
   end
 
   def new
@@ -43,8 +40,42 @@ class AccountsController < ApplicationController
     redirect_to account_index_path, notice: "Account deleted successfully"
   end
 
+  def withdraw
+    amount = params[:amount].to_f
+    if @account.balance >= amount
+      @account.update(balance: @account.balance - amount)
+      redirect_to @account, notice: "Withdrawal successful"
+    else
+      flash[:alert] = "Insufficient balance"
+      render :withdraw
+    end
+  end
+
+  def deposit
+    amount = params[:amount].to_f
+    @account.update(balance: @account.balance + amount)
+    redirect_to @account, notice: "Deposit successful"
+  end
+
+  def verify_pin
+    if request.post?
+      if @account.pin == params[:pin]
+        redirect_to @account
+      else
+        flash[:alert] = "Invalid PIN"
+        render :verify_pin
+      end
+    end
+  end
 
   private
+
+  def set_account
+    @account = Account.find_by(account_number: params[:account_number])
+    unless @account
+      redirect_to accounts_path, notice: 'Account not found'
+    end
+  end
 
   def account_params
     params.require(:account).permit(:account_number, :pin, :balance, :status, :currency)
