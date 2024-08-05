@@ -6,7 +6,7 @@
 <% else %>
     <ul>
         <% @accounts.each do |account| %>
-        <li><%=link_to account.account_number, account%></li>
+        <li><%=link_to account.account_number, account_path(account.account_number)%></li>
         <p>     Current Balance: <%= account.balance %></p>
         <% end %>
     </ul>

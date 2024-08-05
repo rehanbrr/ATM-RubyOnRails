@@ -25,8 +25,7 @@
 /config/initializers/*
 /config/locales/*
 /config/credentials.yml.enc
-/app/helpers/*
-/test
+/Gemfile.lock
 
 # Ignore storage (uploaded files in development and any SQLite databases).
 /storage/*

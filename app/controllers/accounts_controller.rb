@@ -4,19 +4,22 @@ class AccountsController < ApplicationController
   end
 
   def show
-    @account = Account.find(params[:account_number])
+    @account = Account.find_by(account_number: params[:account_number])
+    unless @account
+      redirect_to accounts_path, notice: 'Account not found'
+    end
   end
 
   def new
     account = Account.order(:account_number).last
-    !account ? next_number = 0 : next_number = account.account_number.to_i + 1
+    next_number = account ? account.account_number.to_i + 1 : 0
     @account = current_user.accounts.build(account_number: next_number)
   end
 
   def create
     @account = current_user.accounts.build(account_params)
     if @account.save
-      redirect_to @account, method: :get
+      redirect_to @account
     else
       render :new, status: :unprocessable_entity
     end
