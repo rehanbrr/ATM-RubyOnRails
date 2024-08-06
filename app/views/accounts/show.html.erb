@@ -7,4 +7,5 @@
 <br>
 <%= link_to 'Deposit', deposit_account_path(@account) %>
 <br>
+<%= button_to 'Delete Account', account_path(@account), method: :delete %>
 <%= link_to 'Back', accounts_path %>

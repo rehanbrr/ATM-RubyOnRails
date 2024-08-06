@@ -10,11 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_08_02_124218) do
-  create_table "accounts", id: false, force: :cascade do |t|
-    t.string "account_number"
+ActiveRecord::Schema[7.1].define(version: 2024_08_06_061331) do
+  create_table "accounts", primary_key: "account_number", id: :string, force: :cascade do |t|
     t.string "pin"
-    t.decimal "balance"
+    t.decimal "balance", precision: 10, scale: 2
     t.string "status"
     t.string "currency"
     t.integer "user_id", null: false
@@ -24,15 +23,11 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_02_124218) do
   end
 
   create_table "transactions", force: :cascade do |t|
-    t.datetime "date"
-    t.decimal "amount"
-    t.string "type"
-    t.integer "account_id", null: false
-    t.integer "user_id", null: false
+    t.string "account_number"
+    t.decimal "amount", precision: 10, scale: 2
+    t.string "transaction_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_transactions_on_account_id"
-    t.index ["user_id"], name: "index_transactions_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -49,6 +44,5 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_02_124218) do
   end
 
   add_foreign_key "accounts", "users"
-  add_foreign_key "transactions", "accounts"
-  add_foreign_key "transactions", "users"
+  add_foreign_key "transactions", "accounts", column: "account_number", primary_key: "account_number"
 end

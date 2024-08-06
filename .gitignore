@@ -26,6 +26,7 @@
 /config/locales/*
 /config/credentials.yml.enc
 /Gemfile.lock
+/.byebug_history
 
 # Ignore storage (uploaded files in development and any SQLite databases).
 /storage/*

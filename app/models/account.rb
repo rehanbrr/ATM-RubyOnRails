@@ -3,7 +3,7 @@ class Account < ApplicationRecord
   CURRENCIES = ['PKR', 'USD', 'SAR']
 
   belongs_to :user
-  has_many :transactions, dependent: :destroy
+  has_many :transactions, foreign_key: :account_number, dependent: :destroy
 
   validates :status, inclusion: {in: STATUSES}
   validates :pin, presence: true, format: { with: /\A\d{4}\z/, message: 'Must be exactly 4 digits' }

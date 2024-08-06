@@ -35,10 +35,9 @@ class AccountsController < ApplicationController
   end
 
   def destroy
-    @account = Account.find(params[:id])
-    @account.destroy!
+    @account.delete
 
-    redirect_to account_index_path, notice: "Account deleted successfully"
+    redirect_to accounts_path, notice: "Account deleted successfully"
   end
 
   def withdraw
