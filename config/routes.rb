@@ -5,14 +5,13 @@ Rails.application.routes.draw do
     resources :transactions
     member do
       get 'withdraw'
-      post 'withdraw'
+      post 'withdraw', to: 'accounts#do_withdraw'
       get 'deposit'
-      post 'deposit'
+      post 'deposit', to: 'accounts#do_deposit'
       get 'verify_pin'
-      post 'verify_pin'
+      post 'verify_pin', to: 'accounts#check_pin'
       get 'send_money'
-      post 'send_money'
-      get 'change_status'
+      post 'send_money', to: 'account#transfer_money'
       post 'change_status'
     end
   end
