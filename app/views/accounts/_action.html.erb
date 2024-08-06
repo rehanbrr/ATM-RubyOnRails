@@ -1,4 +1,4 @@
-<%= form_with url: url_for([action_name, @account]), local: true do |form| %>
+<%= form_with url: url_for([action_name, @account]), method: :post, local: true do |form| %>
   <div>
     <%= form.label :amount, "Amount to #{action_name}" %><br>
     <%= form.number_field :amount, step: 0.01 %>

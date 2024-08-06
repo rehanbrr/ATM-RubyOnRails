@@ -1,5 +1,6 @@
 class AccountsController < ApplicationController
   before_action :set_account, only: [:show, :edit, :update, :destroy, :withdraw, :deposit, :verify_pin]
+  before_action :authorize_account, only: [:show, :edit, :update, :destroy, :verify_pin, :withdraw, :deposit]
   def index
     @accounts = current_user.accounts
   end
@@ -41,20 +42,29 @@ class AccountsController < ApplicationController
   end
 
   def withdraw
-    amount = params[:amount].to_f
-    if @account.balance >= amount
-      @account.update(balance: @account.balance - amount)
-      redirect_to @account, notice: "Withdrawal successful"
-    else
-      flash[:alert] = "Insufficient balance"
-      render :withdraw
+    if request.post?
+      amount = params[:amount].to_f
+      if @account.balance >= amount
+        @account.update(balance: @account.balance - amount)
+        redirect_to @account, notice: "Withdrawal successful"
+      else
+        flash[:alert] = "Insufficient balance"
+        render :withdraw
+      end
     end
   end
 
   def deposit
-    amount = params[:amount].to_f
-    @account.update(balance: @account.balance + amount)
-    redirect_to @account, notice: "Deposit successful"
+    if request.post?
+      amount = params[:amount].to_f
+      if amount > 0
+        @account.update(balance: @account.balance + amount)
+        redirect_to @account, notice: "Deposit successful"
+      else
+        flash[:alert] = "Deposit amount must be positive"
+        render :deposit
+      end
+    end
   end
 
   def verify_pin
@@ -63,7 +73,7 @@ class AccountsController < ApplicationController
         redirect_to @account
       else
         flash[:alert] = "Invalid PIN"
-        render :verify_pin
+        redirect_to accounts_path
       end
     end
   end
@@ -74,6 +84,12 @@ class AccountsController < ApplicationController
     @account = Account.find_by(account_number: params[:account_number])
     unless @account
       redirect_to accounts_path, notice: 'Account not found'
+    end
+  end
+
+  def authorize_account
+    unless @account.user == current_user
+      redirect_to accounts_path, notice: 'Not authorized to access this account'
     end
   end
 
