@@ -11,10 +11,11 @@
     <br>
     <%= link_to 'Send Money', send_money_account_path(@account.account_number)%>
     <br>
-    <%= link_to 'Transaction History', account_transactions_path(@account.account_number) %>
-    <br>
     <br>
 <% end %>
+<%= link_to 'Transaction History', account_transactions_path(@account.account_number) %>
+<br>
+<br>
 <%= button_to 'Delete Account', account_path(@account), method: :delete %>
 <% if @account.status == 'Active' %>
     <%= button_to 'Block Account', change_status_account_path(@account)%>

@@ -15,7 +15,6 @@
           <td><%= transaction.amount %></td>
           <td><%= transaction.transaction_type %></td>
           <td><%= transaction.created_at %></td>
-          <td><%= link_to 'Details', account_transaction_path(@account, transaction) %></td>
         </tr>
       <% end %>
     </tbody>
@@ -23,3 +22,5 @@
 <% else %>
   <p>No transactions found.</p>
 <% end %>
+<br>
+<%= link_to 'Back', @account %> 
