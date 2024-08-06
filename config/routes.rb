@@ -12,6 +12,8 @@ Rails.application.routes.draw do
       post 'verify_pin'
       get 'send_money'
       post 'send_money'
+      get 'change_status'
+      post 'change_status'
     end
   end
 

@@ -1,0 +1,25 @@
+<h1>Transactions for Account <%= @account.account_number %></h1>
+
+<% if @transactions.any? %>
+  <table>
+    <thead>
+      <tr>
+        <th>Amount</th>
+        <th>Type</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @transactions.each do |transaction| %>
+        <tr>
+          <td><%= transaction.amount %></td>
+          <td><%= transaction.transaction_type %></td>
+          <td><%= transaction.created_at %></td>
+          <td><%= link_to 'Details', account_transaction_path(@account, transaction) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p>No transactions found.</p>
+<% end %>

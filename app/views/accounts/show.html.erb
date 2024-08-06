@@ -1,15 +1,25 @@
 <h1>Account Details</h1>
 <p>Account Number: <%= @account.account_number %></p>
 <p>Balance: <%= @account.balance %></p>
+<p>Currency: <%= @account.currency %> </p>
 <p>Status: <%= @account.status %></p>
 
-<%= link_to 'Withdraw', withdraw_account_path(@account) %>
-<br>
-<%= link_to 'Deposit', deposit_account_path(@account) %>
-<br>
-<%= link_to 'Send Money', send_money_account_path(@account.account_number)%>
-<br>
-<br>
+<% if @account.status == 'Active' %>
+    <%= link_to 'Withdraw', withdraw_account_path(@account) %>
+    <br>
+    <%= link_to 'Deposit', deposit_account_path(@account) %>
+    <br>
+    <%= link_to 'Send Money', send_money_account_path(@account.account_number)%>
+    <br>
+    <%= link_to 'Transaction History', account_transactions_path(@account.account_number) %>
+    <br>
+    <br>
+<% end %>
 <%= button_to 'Delete Account', account_path(@account), method: :delete %>
+<% if @account.status == 'Active' %>
+    <%= button_to 'Block Account', change_status_account_path(@account)%>
+<% else %>
+    <%= button_to 'Activate Account', change_status_account_path(@account)%>
+<% end %>
 <br>
 <%= link_to 'Back', accounts_path %>
