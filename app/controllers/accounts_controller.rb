@@ -1,6 +1,6 @@
 class AccountsController < ApplicationController
-  before_action :set_account, only: [:show, :edit, :update, :destroy, :withdraw, :deposit, :verify_pin]
-  before_action :authorize_account, only: [:show, :edit, :update, :destroy, :verify_pin, :withdraw, :deposit]
+  before_action :set_account, only: [:show, :edit, :update, :destroy, :withdraw, :deposit, :verify_pin, :send_money]
+  before_action :authorize_account, only: [:show, :edit, :update, :destroy, :verify_pin, :withdraw, :deposit, :send_money]
   def index
     @accounts = current_user.accounts
   end
@@ -37,7 +37,7 @@ class AccountsController < ApplicationController
   def destroy
     @account.delete
 
-    redirect_to accounts_path, notice: "Account deleted successfully"
+    redirect_to accounts_path, notice: 'Account deleted successfully'
   end
 
   def withdraw
@@ -45,9 +45,9 @@ class AccountsController < ApplicationController
       amount = params[:amount].to_f
       if @account.balance >= amount
         @account.update(balance: @account.balance - amount)
-        redirect_to @account, notice: "Withdrawal successful"
+        redirect_to @account, notice: 'Withdrawal successful'
       else
-        flash[:alert] = "Insufficient balance"
+        flash[:alert] = 'Insufficient balance'
         render :withdraw
       end
     end
@@ -58,9 +58,9 @@ class AccountsController < ApplicationController
       amount = params[:amount].to_f
       if amount > 0
         @account.update(balance: @account.balance + amount)
-        redirect_to @account, notice: "Deposit successful"
+        redirect_to @account, notice: 'Deposit successful'
       else
-        flash[:alert] = "Deposit amount must be positive"
+        flash[:alert] = 'Deposit amount must be positive'
         render :deposit
       end
     end
@@ -73,6 +73,21 @@ class AccountsController < ApplicationController
       else
         flash[:alert] = "Invalid PIN"
         redirect_to accounts_path
+      end
+    end
+  end
+
+  def send_money
+    if request.post?
+      amount = params[:amount].to_f
+      if Account.exists?(account_number: params[:recipient_account])
+        @recipient_account = Account.find_by(account_number: params[:recipient_account])
+        @recipient_account.update(balance: @recipient_account.balance + amount)
+        @account.update(balance: @account.balance - amount)
+
+        redirect_to @account, notice: 'Money Transferred'
+      else
+        redirect_to account_path, notice: 'Account does not exist or Insufficient Balance'
       end
     end
   end

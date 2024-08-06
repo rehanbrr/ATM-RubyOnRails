@@ -7,5 +7,9 @@
 <br>
 <%= link_to 'Deposit', deposit_account_path(@account) %>
 <br>
+<%= link_to 'Send Money', send_money_account_path(@account.account_number)%>
+<br>
+<br>
 <%= button_to 'Delete Account', account_path(@account), method: :delete %>
+<br>
 <%= link_to 'Back', accounts_path %>

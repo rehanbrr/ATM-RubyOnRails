@@ -10,6 +10,8 @@ Rails.application.routes.draw do
       post 'deposit'
       get 'verify_pin'
       post 'verify_pin'
+      get 'send_money'
+      post 'send_money'
     end
   end
 
