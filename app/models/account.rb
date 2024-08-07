@@ -15,7 +15,6 @@ class Account < ApplicationRecord
   validates :balance, presence: true, numericality: true
   validates :currency, presence: true, inclusion: { in: CURRENCIES }
 
-
   def valid_transfer?(recipient, amount)
     return false unless recipient
 

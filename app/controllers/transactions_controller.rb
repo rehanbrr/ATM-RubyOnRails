@@ -7,7 +7,7 @@ class TransactionsController < ApplicationController
   private
 
   def set_account
-    @account = Account.find_by(account_id: params[:account_id])
+    @account = Account.find_by(id: params[:account_id])
     return if @account
 
     redirect_to accounts_path, notice: 'Account not found'
