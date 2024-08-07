@@ -5,11 +5,12 @@ class TransactionsController < ApplicationController
   end
 
   private
+
   def set_account
     @account = Account.find_by(account_number: params[:account_account_number])
-    unless @account
-      redirect_to accounts_path, notice: 'Account not found'
-    end
+    return if @account
+
+    redirect_to accounts_path, notice: 'Account not found'
   end
 
   def transaction_params

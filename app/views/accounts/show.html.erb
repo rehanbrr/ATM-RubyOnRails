@@ -1,26 +1,26 @@
 <h1>Account Details</h1>
 <p>Account Number: <%= @account.account_number %></p>
 <p>Balance: <%= @account.balance %></p>
-<p>Currency: <%= @account.currency %> </p>
-<p>Status: <%= @account.status %></p>
+<p>Currency: <%= @account.currency %></p>
+<p>Status: <%= @account.status.humanize %></p>
 
-<% if @account.status == 'Active' %>
-    <%= link_to 'Withdraw', account_path(@account, form_type: 'withdraw') %>
-    <br>
-    <%= link_to 'Deposit', account_path(@account, form_type: 'deposit') %>
-    <br>
-    <%= link_to 'Send Money', account_path(@account, form_type: 'send_money') %>
-    <br>
-    <br>
+<% if @account.active? %>
+  <%= link_to 'Withdraw', account_path(@account, form_type: 'withdraw') %>
+  <br>
+  <%= link_to 'Deposit', account_path(@account, form_type: 'deposit') %>
+  <br>
+  <%= link_to 'Send Money', account_path(@account, form_type: 'send_money') %>
+  <br>
+  <br>
 <% end %>
 <%= link_to 'Transaction History', account_transactions_path(@account.account_number) %>
 <br>
 <br>
 <%= button_to 'Delete Account', account_path(@account), method: :delete %>
-<% if @account.status == :active %>
-    <%= button_to 'Block Account', change_status_account_path(@account)%>
+<% if @account.active? %>
+  <%= button_to 'Block Account', change_status_account_path(@account) %>
 <% else %>
-    <%= button_to 'Activate Account', change_status_account_path(@account)%>
+  <%= button_to 'Activate Account', change_status_account_path(@account) %>
 <% end %>
 <br>
 <%= link_to 'Back', accounts_path %>

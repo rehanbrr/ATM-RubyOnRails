@@ -1,6 +1,8 @@
 class Account < ApplicationRecord
-  STATUSES = ['Active', 'Blocked']
-  CURRENCIES = ['PKR', 'USD', 'SAR']
+  after_initialize :set_default_status, if: :new_record?
+  
+  CURRENCIES = ['PKR', 'USD', 'SAR'].freeze
+
   enum status: {
     active: 1,
     blocked: 2,
@@ -11,22 +13,22 @@ class Account < ApplicationRecord
 
   validates :pin, presence: true, format: { with: /\A\d{4}\z/, message: 'Must be exactly 4 digits' }
   validates :balance, presence: true, numericality: true
-  validates :currency, presence: true, inclusion: {in: CURRENCIES}
+  validates :currency, presence: true, inclusion: { in: CURRENCIES }
 
   self.primary_key = 'account_number'
 
-  def self.valid_transfer?(recipient, amount, account)
-    sufficient_balance?(amount, account) && recipient.currency == account.currency && recipient.status != 'Blocked'
+  def valid_transfer?(recipient, amount)
+    sufficient_balance?(amount) && recipient.currency == currency && recipient.status != 'Blocked'
   end
 
-  def self.sufficient_balance?(amount, account)
-    amount <= account.balance
+  def sufficient_balance?(amount)
+    amount <= balance
   end
 
-  def self.give_notice(recipient, amount, account)
-    if !sufficient_balance?(amount, account)
+  def give_notice(recipient, amount)
+    if !sufficient_balance?(amount)
       'Insufficient Balance'
-    elsif recipient.currency != account.currency
+    elsif recipient.currency != self.currency
       'Cannot transfer to different currency'
     elsif recipient.status == 'Blocked'
       'Cannot transfer to blocked account'
@@ -35,11 +37,11 @@ class Account < ApplicationRecord
     end
   end
 
-  def self.create_transaction(amount, type, account, user)
-    account.transactions.create!(
-      user: user,
-      amount: amount,
-      transaction_type: Transaction.transaction_types[type]
-    )
+  def create_transaction(amount, type, account = self)
+    account.transactions.create!(user: account.user, amount:, transaction_type: Transaction.transaction_types[type])
+  end
+
+  def set_default_status
+    self.status ||= :active
   end
 end

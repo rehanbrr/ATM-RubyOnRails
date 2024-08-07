@@ -2,7 +2,7 @@
 <%= form_with model: @account, local: true do |form| %>
     <div>
         <%= form.label :account_number %><br>
-        <%= form.text_field :account_number, value: @account.account_number, :readonly => true%>
+        <%= form.text_field :account_number, value: @account.account_number, readonly: true%>
     </div>
 
     <div>
@@ -12,13 +12,7 @@
             <div><%= message %></div>
         <% end %>
     </div>
-
     <br>
-
-    <%= form.text_field :status, value: @account.status, :readonly => true %>
-
-    <br>
-
     <div>
         <%= form.label :currency %>
         <%= form.select :currency, Account::CURRENCIES, selected: @account.currency || 'PKR'%>

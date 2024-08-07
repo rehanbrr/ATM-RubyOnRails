@@ -15,7 +15,8 @@
 
 <%= link_to 'Create Account', new_account_path%>
 
+<%= will_paginate @accounts %>
+
 <% if params[:form_type] == 'verify_pin' && @account%>
   <%= render 'verify_pin_form', account: @account %>
 <% end %>
-
