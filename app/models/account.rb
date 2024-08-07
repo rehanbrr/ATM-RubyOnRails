@@ -18,6 +18,8 @@ class Account < ApplicationRecord
   self.primary_key = 'account_number'
 
   def valid_transfer?(recipient, amount)
+    return false unless recipient
+
     sufficient_balance?(amount) && recipient.currency == currency && recipient.status != 'Blocked'
   end
 
@@ -26,14 +28,14 @@ class Account < ApplicationRecord
   end
 
   def give_notice(recipient, amount)
+    return 'Account does not exist' unless recipient
+
     if !sufficient_balance?(amount)
       'Insufficient Balance'
-    elsif recipient.currency != self.currency
+    elsif recipient.currency != currency
       'Cannot transfer to different currency'
     elsif recipient.status == 'Blocked'
       'Cannot transfer to blocked account'
-    elsif !recipient
-      'Account does not exist'
     end
   end
 

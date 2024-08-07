@@ -3,7 +3,7 @@ class AccountsController < ApplicationController
   before_action :authorize_account, only: [:show, :update, :destroy, :deposit, :withdraw, :verify_pin, :send_money, :change_status]
 
   def index
-    @accounts = Account.paginate(page: params[:page], per_page: 3)
+    @accounts = current_user.accounts.paginate(page: params[:page], per_page: 3)
     return unless params[:form_type].eql?('verify_pin') && params[:account_number]
 
     @account = Account.find_by(account_number: params[:account_number])
@@ -75,7 +75,7 @@ class AccountsController < ApplicationController
   def send_money
     amount = params[:amount].to_f
     recipient = find_account(params[:recipient_account])
-    if @account.valid_transfer?(recipient, amount, @account)
+    if @account.valid_transfer?(recipient, amount)
       recipient.update(balance: recipient.balance + amount)
       @account.update(balance: @account.balance - amount)
 
@@ -83,7 +83,7 @@ class AccountsController < ApplicationController
       @account.create_transaction(amount, :received_money, recipient)
       redirect_to @account, notice: 'Money Transferred'
     else
-      redirect_to @account, notice: Account.give_notice(recipient, amount, @account)
+      redirect_to @account, notice: @account.give_notice(recipient, amount)
     end
   end
 
