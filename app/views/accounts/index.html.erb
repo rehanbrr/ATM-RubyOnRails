@@ -6,7 +6,7 @@
 <% else %>
     <ul>
         <% @accounts.each do |account| %>
-        <li><%=link_to account.account_number, verify_pin_account_path(account.account_number), method: :post %></li>
+        <li><%=link_to account.account_number, accounts_path(form_type: 'verify_pin', account_number: account.account_number) %></li>
         <p>     Currency: <%= account.currency %> | Balance: <%= account.balance %></p>
         <% end %>
     </ul>
@@ -14,3 +14,8 @@
 <% end %>
 
 <%= link_to 'Create Account', new_account_path%>
+
+<% if params[:form_type] == 'verify_pin' && @account%>
+  <%= render 'verify_pin_form', account: @account %>
+<% end %>
+

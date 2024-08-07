@@ -2,7 +2,7 @@ module AccountConcern
   extend ActiveSupport::Concern
 
   included do
-    before_action :set_account, only: [:show, :edit, :update, :destroy, :withdraw, :deposit, :verify_pin, :send_money, :change_status, :check_pin]
+    before_action :set_account, only: [:show, :edit, :update, :destroy, :deposit, :withdraw, :verify_pin, :send_money, :change_status]
   end
 
   def set_account

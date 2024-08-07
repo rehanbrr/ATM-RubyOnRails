@@ -1,6 +1,5 @@
 class TransactionsController < ApplicationController
   before_action :set_account
-
   def index
     @transactions = @account.transactions
   end

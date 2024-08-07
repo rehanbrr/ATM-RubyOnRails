@@ -4,14 +4,10 @@ Rails.application.routes.draw do
   resources :accounts, param: :account_number do
     resources :transactions
     member do
-      get 'withdraw'
-      post 'withdraw', to: 'accounts#do_withdraw'
-      get 'deposit'
-      post 'deposit', to: 'accounts#do_deposit'
-      get 'verify_pin'
-      post 'verify_pin', to: 'accounts#check_pin'
-      get 'send_money'
-      post 'send_money', to: 'account#transfer_money'
+      post 'withdraw'
+      post 'deposit'
+      post 'verify_pin'
+      post 'send_money'
       post 'change_status'
     end
   end

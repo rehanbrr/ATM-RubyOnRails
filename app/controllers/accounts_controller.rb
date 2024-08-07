@@ -1,14 +1,17 @@
 class AccountsController < ApplicationController
-  before_action :set_account, only: [:show, :edit, :update, :destroy, :do_withdraw, :do_deposit, :deposit, :withdraw, :verify_pin, :send_money, :change_status, :check_pin]
-  before_action :authorize_account, only: [:show, :edit, :update, :destroy, :do_withdraw, :do_deposit, :deposit, :withdraw, :verify_pin, :send_money, :change_status, :check_pin]
+  include AccountConcern
+  before_action :authorize_account, only: [:show, :edit, :update, :destroy, :deposit, :withdraw, :verify_pin, :send_money, :change_status]
   def index
     @accounts = current_user.accounts
+    if params[:form_type] == 'verify_pin' && params[:account_number]
+      @account = Account.find_by(account_number: params[:account_number])
+    end
   end
 
   def new
     account = Account.order(:account_number).last
-    next_number = account ? account.account_number.to_i + 1 : 0
-    @account = current_user.accounts.build(account_number: next_number)
+    next_number = account ? account.account_number + 1 : 0
+    @account = current_user.accounts.build(account_number: next_number, status: :active)
   end
 
   def create
@@ -20,6 +23,9 @@ class AccountsController < ApplicationController
     end
   end
 
+  def edit
+  end
+
   def update
     @account.update(account_params) ? redirect_to(@account) : render(:edit, status: :unprocessable_entity)
   end
@@ -29,11 +35,16 @@ class AccountsController < ApplicationController
     redirect_to accounts_path, notice: 'Account deleted successfully'
   end
 
-  def do_withdraw
-    amount = get_amount
-    if sufficient_balance?(amount)
+  def change_status
+    @account.status == :active ? @account.update(status: :blocked) : @account.update(status: :active)
+    redirect_to @account
+  end
+
+  def withdraw
+    amount = params[:amount].to_f
+    if Account.sufficient_balance?(amount, @account)
       @account.update(balance: @account.balance - amount)
-      create_transaction(amount, 'withdraw')
+      Account.create_transaction(amount, :withdraw, @account, current_user)
       redirect_to @account, notice: 'Withdrawal successful'
     else
       flash[:alert] = 'Insufficient balance'
@@ -41,11 +52,11 @@ class AccountsController < ApplicationController
     end
   end
 
-  def do_deposit
-    amount = get_amount
+  def deposit
+    amount = params[:amount].to_f
     if amount > 0
       @account.update(balance: @account.balance + amount)
-      create_transaction(amount, 'deposit')
+      Account.create_transaction(amount, :deposit, @account, current_user)
       redirect_to @account, notice: 'Deposit successful'
     else
       flash[:alert] = 'Deposit amount must be positive'
@@ -53,96 +64,38 @@ class AccountsController < ApplicationController
     end
   end
 
-  def check_pin
+  def verify_pin
     if @account.pin == params[:pin]
       redirect_to @account
     else
       flash[:alert] = "Invalid PIN"
-      redirect_to accounts_path
+      redirect_to accounts_path(form_type: 'verify_pin', account_number: params[:account_number])
     end
   end
 
-  def transfer_money
-    amount = get_amount
+  def send_money
+    amount = params[:amount].to_f
     recipient = find_account(params[:recipient_account])
-    if valid_transfer?(recipient, amount)
+    if Account.valid_transfer?(recipient, amount, @account)
       recipient.update(balance: recipient.balance + amount)
       @account.update(balance: @account.balance - amount)
 
-      create_transaction(amount, 'send money')
-      create_transaction(amount, 'received money', recipient)
+      Account.create_transaction(amount, :send_money, @account, current_user)
+      Account.create_transaction(amount, :received_money, recipient, current_user)
       redirect_to @account, notice: 'Money Transferred'
     else
-      redirect_to @account, notice: give_notice(recipient, amount)
+      redirect_to @account, notice: Account.give_notice(recipient, amount, @account)
     end
   end
 
-  def change_status
-    @account.status == 'Active' ? @account.update(status: 'Blocked') : @account.update(status: 'Active')
-    redirect_to @account
-  end
-
-  def edit
-  end
-
-  def withdraw
-  end
-
-  def deposit
-  end
-
-  def verify_pin
-  end
-
-  def send_money
-  end
-
-  def send_money
-  end
 
   private
-
-  def give_notice(recipient, amount)
-    if !sufficient_balance?(amount)
-      'Insufficient Balance'
-    elsif recipient.currency != @account.currency
-      'Cannot transfer to different currency'
-    elsif recipient.status == 'Blocked'
-      'Cannot transfer to blocked account'
-    elsif !recipient
-      'Account does not exist'
-    end
-  end
-
-  def valid_transfer?(recipient, amount)
-    sufficient_balance?(amount) && recipient.currency == @account.currency && recipient.status != 'Blocked'
-  end
-
-  def sufficient_balance?(amount)
-    amount <= @account.balance
-  end
-
-  def get_amount
-    params[:amount].to_f
-  end
-
-  def create_transaction(amount, type, account = @account)
+  def create_transaction(amount, type, account)
     account.transactions.create!(
       user: current_user,
       amount: amount,
       transaction_type: type
     )
-  end
-
-  def find_account(account_number)
-    Account.find_by(account_number: account_number)
-  end
-
-  def set_account
-    @account = find_account(params[:account_number])
-    unless @account
-      redirect_to accounts_path, notice: 'Account not found'
-    end
   end
 
   def authorize_account

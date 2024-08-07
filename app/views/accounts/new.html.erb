@@ -15,10 +15,7 @@
 
     <br>
 
-    <div>
-        <%= form.label :status %>
-        <%= form.text_field :status, value: 'Active', :readonly => true %>
-    </div>
+    <%= form.text_field :status, value: @account.status, :readonly => true %>
 
     <br>
 
