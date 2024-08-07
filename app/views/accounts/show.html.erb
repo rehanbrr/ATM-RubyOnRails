@@ -1,5 +1,5 @@
 <h1>Account Details</h1>
-<p>Account Number: <%= @account.account_number %></p>
+<p>Account Number: <%= @account.id %></p>
 <p>Balance: <%= @account.balance %></p>
 <p>Currency: <%= @account.currency %></p>
 <p>Status: <%= @account.status.humanize %></p>
@@ -13,7 +13,7 @@
   <br>
   <br>
 <% end %>
-<%= link_to 'Transaction History', account_transactions_path(@account.account_number) %>
+<%= link_to 'Transaction History', account_transactions_path(@account) %>
 <br>
 <br>
 <%= button_to 'Delete Account', account_path(@account), method: :delete %>

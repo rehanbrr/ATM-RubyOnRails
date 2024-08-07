@@ -4,21 +4,19 @@ class AccountsController < ApplicationController
 
   def index
     @accounts = current_user.accounts.paginate(page: params[:page], per_page: 3)
-    return unless params[:form_type].eql?('verify_pin') && params[:account_number]
+    return unless params[:form_type].eql?('verify_pin') && params[:account_id]
 
-    @account = Account.find_by(account_number: params[:account_number])
+    @account = Account.find_by(id: params[:account_id])
   end
 
   def new
-    account = Account.order(:account_number).last
-    next_number = account ? account.account_number + 1 : 0
-    @account = current_user.accounts.build(account_number: next_number, status: :active)
+    @account = current_user.accounts.build(status: :active)
   end
 
   def create
-    account = current_user.accounts.build(account_params)
-    if account.save
-      redirect_to account
+    @account = current_user.accounts.build(account_params)
+    if @account.save
+      redirect_to @account
     else
       render :new, status: :unprocessable_entity
     end
@@ -29,12 +27,16 @@ class AccountsController < ApplicationController
   end
 
   def destroy
-    redirect_to accounts_path, notice: 'Problem deleting account' unless @account.destroy
-    redirect_to accounts_path, notice: 'Account deleted successfully'
+    if @account.destroy
+      redirect_to accounts_path, notice: 'Account deleted successfully'
+    else
+      redirect_to accounts_path, notice: 'Problem deleting account'
+    end
   end
 
   def change_status
-    @account.active? ? @account.update(status: :blocked) : @account.update(status: :active)
+    new_status = @account.active? ? :blocked : :active
+    @account.update(status: new_status)
     redirect_to @account
   end
 
@@ -68,13 +70,13 @@ class AccountsController < ApplicationController
       redirect_to @account
     else
       flash[:alert] = 'Invalid PIN'
-      redirect_to accounts_path(form_type: 'verify_pin', account_number: params[:account_number])
+      redirect_to accounts_path(form_type: 'verify_pin', account_id: params[:account_id])
     end
   end
 
   def send_money
     amount = params[:amount].to_f
-    recipient = find_account(params[:recipient_account])
+    recipient = find_account(params[:recipient_account_id])
     if @account.valid_transfer?(recipient, amount)
       recipient.update(balance: recipient.balance + amount)
       @account.update(balance: @account.balance - amount)
@@ -96,6 +98,6 @@ class AccountsController < ApplicationController
   end
 
   def account_params
-    params.require(:account).permit(:account_number, :pin, :balance, :status, :currency)
+    params.require(:account).permit(:pin, :balance, :status, :currency)
   end
 end

@@ -6,13 +6,13 @@ module AccountConcern
   end
 
   def set_account
-    @account = find_account(params[:account_number])
-    unless @account
-      redirect_to accounts_path, notice: 'Account not found'
-    end
+    @account = Account.find(params[:id] || params[:account_id])
+    return if @account
+
+    redirect_to accounts_path, notice: 'Account not found'
   end
 
-  def find_account(account_number)
-    Account.find_by(account_number: account_number)
+  def find_account(account_id)
+    Account.find(account_id)
   end
 end

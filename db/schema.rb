@@ -10,8 +10,8 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_08_07_091346) do
-  create_table "accounts", primary_key: "account_number", force: :cascade do |t|
+ActiveRecord::Schema[7.1].define(version: 2024_08_07_122006) do
+  create_table "accounts", force: :cascade do |t|
     t.string "pin"
     t.decimal "balance", precision: 10, scale: 2
     t.integer "status"
@@ -22,12 +22,12 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_07_091346) do
   end
 
   create_table "transactions", force: :cascade do |t|
-    t.integer "account_number"
     t.decimal "amount", precision: 10, scale: 2
     t.integer "transaction_type"
     t.integer "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "account_id", null: false
   end
 
   create_table "users", force: :cascade do |t|
@@ -44,6 +44,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_07_091346) do
   end
 
   add_foreign_key "accounts", "users"
-  add_foreign_key "transactions", "accounts", column: "account_number", primary_key: "account_number", on_delete: :cascade
+  add_foreign_key "transactions", "accounts", on_delete: :cascade
   add_foreign_key "transactions", "users"
 end

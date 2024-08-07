@@ -1,26 +1,25 @@
 class Account < ApplicationRecord
   after_initialize :set_default_status, if: :new_record?
-  
+
   CURRENCIES = ['PKR', 'USD', 'SAR'].freeze
 
   enum status: {
     active: 1,
-    blocked: 2,
+    blocked: 2
   }
 
   belongs_to :user
-  has_many :transactions, foreign_key: :account_number, dependent: :destroy
+  has_many :transactions, dependent: :destroy
 
   validates :pin, presence: true, format: { with: /\A\d{4}\z/, message: 'Must be exactly 4 digits' }
   validates :balance, presence: true, numericality: true
   validates :currency, presence: true, inclusion: { in: CURRENCIES }
 
-  self.primary_key = 'account_number'
 
   def valid_transfer?(recipient, amount)
     return false unless recipient
 
-    sufficient_balance?(amount) && recipient.currency == currency && recipient.status != 'Blocked'
+    sufficient_balance?(amount) && recipient.currency == currency && recipient.status != 'blocked'
   end
 
   def sufficient_balance?(amount)
@@ -34,7 +33,7 @@ class Account < ApplicationRecord
       'Insufficient Balance'
     elsif recipient.currency != currency
       'Cannot transfer to different currency'
-    elsif recipient.status == 'Blocked'
+    elsif recipient.status == 'blocked'
       'Cannot transfer to blocked account'
     end
   end
