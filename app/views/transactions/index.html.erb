@@ -9,13 +9,7 @@
       </tr>
     </thead>
     <tbody>
-      <% @transactions.each do |transaction| %>
-        <tr>
-          <td><%= transaction.amount %></td>
-          <td><%= transaction.transaction_type.humanize %></td>
-          <td><%= transaction.created_at %></td>
-        </tr>
-      <% end %>
+    <%= render @transactions %>
     </tbody>
   </table>
 <% else %>

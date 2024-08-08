@@ -1,4 +1,5 @@
 <h1>Welcome <%= current_user.email %></h1>
+<%= link_to 'Create Account', new_account_path %>
 <h2>Here are your accounts</h2>
 
 <% if @accounts.empty? %>
@@ -14,9 +15,8 @@
   </ul>
   <p><%= link_to 'Back', root_path %></p>
 <% end %>
-
-<%= link_to 'Create Account', new_account_path %>
-
+<br>
+<br>
 <%= will_paginate @accounts %>
 
 <% if params[:form_type] == 'verify_pin' %>

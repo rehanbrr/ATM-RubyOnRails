@@ -1,6 +1,7 @@
 class AccountsController < ApplicationController
   include AccountConcern
-  before_action :authorize_account, only: [:show, :update, :destroy, :deposit, :withdraw, :verify_pin, :send_money, :change_status]
+  before_action :set_account, except: [:index, :create, :new]
+  before_action :authorize_account, except: [:index, :create, :new]
 
   def index
     @accounts = current_user.accounts.paginate(page: params[:page], per_page: 3)
@@ -43,26 +44,35 @@ class AccountsController < ApplicationController
   def withdraw
     amount = params[:amount].to_f
 
-    if @account.sufficient_balance?(amount)
-      @account.update(balance: @account.balance - amount)
-      @account.create_transaction(amount, :withdraw)
-      redirect_to @account, notice: 'Withdrawal successful'
-    else
-      flash[:alert] = 'Insufficient balance'
-      render :withdraw
+    ActiveRecord::Base.transaction do
+      @account.lock!
+      if @account.sufficient_balance?(amount)
+        @account.update(balance: @account.balance - amount)
+        @account.create_transaction(amount, :withdraw)
+        redirect_to @account, notice: 'Withdrawal successful'
+      else
+        flash[:alert] = 'Insufficient balance'
+        redirect_to @account
+      end
     end
+  rescue ActiveRecord::StaleObjectError, ActiveRecord::RecordInvalid
+    flash[:alert] = 'Transaction failed. Please try again.'
+    redirect_to @account
   end
 
   def deposit
     amount = params[:amount].to_f
-    if amount.positive?
-      @account.update(balance: @account.balance + amount)
+    return unless amount.positive?
+
+    ActiveRecord::Base.transaction do
+      @account.lock!
+      @account.update!(balance: @account.balance + amount)
       @account.create_transaction(amount, :deposit)
       redirect_to @account, notice: 'Deposit successful'
-    else
-      flash[:alert] = 'Deposit amount must be positive'
-      render :deposit
     end
+  rescue ActiveRecord::StaleObjectError, ActiveRecord::RecordInvalid
+    flash[:alert] = 'Transaction failed. Please try again.'
+    redirect_to @account
   end
 
   def verify_pin
@@ -77,16 +87,24 @@ class AccountsController < ApplicationController
   def send_money
     amount = params[:amount].to_f
     recipient = find_account(params[:recipient_account_id])
-    if @account.valid_transfer?(recipient, amount)
-      recipient.update(balance: recipient.balance + amount)
-      @account.update(balance: @account.balance - amount)
+    ActiveRecord::Base.transaction do
+      @account.lock!
+      recipient.lock!
+      if @account.valid_transfer?(recipient, amount)
+        recipient.update(balance: recipient.balance + amount)
+        @account.update(balance: @account.balance - amount)
 
-      @account.create_transaction(amount, :send_money)
-      @account.create_transaction(amount, :received_money, recipient)
-      redirect_to @account, notice: 'Money Transferred'
-    else
-      redirect_to @account, notice: @account.give_notice(recipient, amount)
+        @account.create_transaction(amount, :send_money)
+        @account.create_transaction(amount, :received_money, recipient)
+        redirect_to @account, notice: 'Money Transferred'
+      else
+        redirect_to @account, notice: @account.give_notice(recipient, amount)
+      end
     end
+
+  rescue ActiveRecord::StaleObjectError, ActiveRecord::RecordInvalid
+    flash[:alert] = 'Transaction failed. Please try again.'
+    redirect_to @account
   end
 
   private
@@ -94,7 +112,7 @@ class AccountsController < ApplicationController
   def authorize_account
     return if @account.user == current_user
 
-    redirect_to accounts_path, notice: 'Not authorized to access this account'
+    render layout: 'unauthorized', status: :unauthorized
   end
 
   def account_params
