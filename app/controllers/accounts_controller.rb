@@ -101,7 +101,6 @@ class AccountsController < ApplicationController
         redirect_to @account, notice: @account.give_notice(recipient, amount)
       end
     end
-
   rescue ActiveRecord::StaleObjectError, ActiveRecord::RecordInvalid
     flash[:alert] = 'Transaction failed. Please try again.'
     redirect_to @account
@@ -112,7 +111,7 @@ class AccountsController < ApplicationController
   def authorize_account
     return if @account.user == current_user
 
-    render layout: 'unauthorized', status: :unauthorized
+    redirect_to accounts_path, status: :unauthorized
   end
 
   def account_params

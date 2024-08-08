@@ -1,7 +1,7 @@
 <%= form_with url: send_money_account_path(@account), method: :post, local: true do |form| %>
     <div>
-        <%= form.label :recipient_account, "Enter Recipient Account Number" %><br>
-        <%= form.text_field :recipient_account %>
+        <%= form.label :recipient_account_id, "Enter Recipient Account Number" %><br>
+        <%= form.text_field :recipient_account_id %>
     </div>
 <br>
     <div>
