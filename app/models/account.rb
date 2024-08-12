@@ -15,7 +15,7 @@ class Account < ApplicationRecord
   validates :currency, presence: true, inclusion: { in: CURRENCIES }
 
   def valid_transfer?(recipient, amount)
-    sufficient_balance?(amount) && recipient&.currency == currency && recipient&.blocked?
+    sufficient_balance?(amount) && recipient&.currency == currency && recipient&.active?
   end
 
   def sufficient_balance?(amount)
