@@ -1,0 +1,28 @@
+<h1>Welcome <%= current_user.email %></h1>
+<%= link_to 'Create Account', new_account_path %>
+<h2>Here are your accounts</h2>
+
+<% if @accounts.empty? %>
+  <p>No accounts to display. Please create one.</p>
+<% else %>
+  <ul>
+    <% @accounts.each do |account| %>
+      <li>
+        <%= link_to "Account ##{account.id}", accounts_path(form_type: 'verify_pin', account_id: account.id) %>
+        <p>Currency: <%= account.currency %> | Balance: <%= account.balance %></p>
+      </li>
+    <% end %>
+  </ul>
+  <p><%= link_to 'Back', root_path %></p>
+<% end %>
+<br>
+<br>
+<%= will_paginate @accounts %>
+
+<% if params[:form_type] == 'verify_pin' %>
+  <% if @account %>
+    <%= render 'verify_pin_form', account: @account %>
+  <% else %>
+    <p>Account not found.</p>
+  <% end %>
+<% end %>

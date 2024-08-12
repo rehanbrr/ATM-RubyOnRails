@@ -1,0 +1,22 @@
+<h1> New Account </h1>
+<%= form_with model: @account, local: true do |form| %>
+    <div>
+        <%= form.label :pin %>
+        <%= form.number_field :pin %>
+        <% @account.errors.full_messages_for(:pin).each do |message| %>
+            <div><%= message %></div>
+        <% end %>
+    </div>
+    <br>
+    <div>
+        <%= form.label :currency %>
+        <%= form.select :currency, Account::CURRENCIES, selected: @account.currency || 'PKR'%>
+    </div>
+
+    <br>
+
+    <%= form.number_field :balance, value: 0, type: :hidden%>
+    <div>
+        <%= form.submit %>
+    </div>
+<% end %>

@@ -1,0 +1,36 @@
+<h1>Account Details</h1>
+<p>Account Number: <%= @account.id %></p>
+<p>Balance: <%= @account.balance %></p>
+<p>Currency: <%= @account.currency %></p>
+<p>Status: <%= @account.status.humanize %></p>
+
+<% if @account.active? %>
+  <%= link_to 'Withdraw', account_path(@account, form_type: 'withdraw') %>
+  <br>
+  <%= link_to 'Deposit', account_path(@account, form_type: 'deposit') %>
+  <br>
+  <%= link_to 'Send Money', account_path(@account, form_type: 'send_money') %>
+  <br>
+  <br>
+<% end %>
+<%= link_to 'Transaction History', account_transactions_path(@account) %>
+<br>
+<br>
+<%= button_to 'Delete Account', account_path(@account), method: :delete %>
+<% if @account.active? %>
+  <%= button_to 'Block Account', change_status_account_path(@account) %>
+<% else %>
+  <%= button_to 'Activate Account', change_status_account_path(@account) %>
+<% end %>
+<br>
+<%= link_to 'Back', accounts_path %>
+
+<% case params[:form_type] %>
+<% when 'withdraw' %>
+  <%= render 'withdraw_form' %>
+<% when 'deposit' %>
+  <%= render 'deposit_form' %>
+<% when 'send_money' %>
+  <%= render 'send_money_form' %>
+<% when 'verify_pin' %>
+<% end %>

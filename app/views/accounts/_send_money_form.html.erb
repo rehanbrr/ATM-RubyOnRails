@@ -1,0 +1,15 @@
+<%= form_with url: send_money_account_path(@account), method: :post, local: true do |form| %>
+    <div>
+        <%= form.label :recipient_account, "Enter Recipient Account Number" %><br>
+        <%= form.text_field :recipient_account %>
+    </div>
+<br>
+    <div>
+        <%= form.label :amount, "Enter Amount" %><br>
+        <%= form.number_field :amount %>
+    </div>
+<br>
+    <div>
+        <%= form.submit "Transfer" %>
+    </div>
+<% end %>
