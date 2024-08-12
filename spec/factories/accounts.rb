@@ -1,28 +1,17 @@
 FactoryBot.define do
   factory :account do
+    balance { 1000.0 }
     pin { '1234' }
-    balance { 1234.43 }
+    status { :active }
+    currency { 'USD' }
     association :user
-    currency { 'SAR' }
 
     transient do
-      pin_wrong { false }
-      balance_wrong { false }
-      currency_wrong { false }
+      with_transactions { false }
     end
 
-    after(:build) do |account, evaluator|
-      account.pin = '12' if evaluator.pin_wrong
-      account.balance = 'twenty' if evaluator.balance_wrong
-      account.currency = 'EUR' if evaluator.currency_wrong
+    after(:create) do |account, evaluator|
+      create_list(:transaction, 2, account: account) if evaluator.with_transactions
     end
-  end
-
-  trait :active do
-    status { 1 }
-  end
-
-  trait :blocked do
-    status { 2 }
   end
 end

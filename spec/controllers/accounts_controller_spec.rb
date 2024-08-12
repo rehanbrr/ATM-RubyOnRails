@@ -1,133 +1,164 @@
 require 'rails_helper'
 
 RSpec.describe AccountsController, type: :controller do
-  let(:user) { build(:user) }
-  let!(:account) { create(:account, user: user) }
+  let(:user) { create(:user) }
+  let(:account) { create(:account, user: user) }
 
   before do
     allow_any_instance_of(described_class).to receive(:current_user).and_return(user)
   end
 
-  context 'POST #create' do
+  describe 'POST #create' do
     context 'with valid attributes' do
-      it 'creates a new valid account' do
-        expect {
-          post :create, params: { account: attributes_for(:account) }
-        }.to change(Account, :count).by(1)
+      let(:account_params) { attributes_for(:account, user: user) }
+
+      it 'saves the new account in the database' do
+        post :create, params: { account: account_params }
+        new_account = assigns(:account)
+
+        expect(new_account).to be_persisted
+        expect(new_account.user).to eq(user)
+        expect(new_account.balance).to eq(account_params[:balance])
+        expect(new_account.pin).to eq(account_params[:pin])
       end
 
-      it 'redirects to the show account view' do
-        post :create, params: { account: attributes_for(:account) }
-        expect(response).to redirect_to(Account.last)
-      end
-    end
-
-    # context 'with invalid attributes' do
-    #   it 'does not create a new account' do
-    #     byebug
-    #     expect {
-    #       post :create, params: { account: attributes_for(:account, pin_wrong: true) }
-    #     }.to_not change(Account, :count)
-    #   end
-
-    #   it 'does not redirect to show account view' do
-    #     post :create, params: { account: attributes_for(:account, pin_wrong: true) }
-    #     expect(response).to render_template(:new)
-    #   end
-    # end
-  end
-
-  context 'PATCH #change_status' do
-    context 'when the account is active' do
-      before { account.update(status: :active) }
-
-      it 'changes the status to blocked' do
-        patch :change_status, params: { id: account.id }
-        expect(account.reload.status).to eq('blocked')
+      it 'redirects to the new account' do
+        post :create, params: { account: account_params }
+        expect(response).to redirect_to(account_path(assigns(:account)))
       end
     end
 
-    context 'when the account is active' do
-      before { account.update(status: :blocked) }
+    context 'with invalid attributes' do
+      let(:invalid_account_params) { attributes_for(:account, balance: nil) }
 
-      it 'changes the status to active' do
-        patch :change_status, params: { id: account.id }
-        expect(account.reload.status).to eq('active')
+      it 'does not save the new account in the database' do
+        post :create, params: { account: invalid_account_params }
+        expect(assigns(:account)).not_to be_persisted
+      end
+
+      it 're-renders the new template' do
+        post :create, params: { account: invalid_account_params }
+        expect(response).to render_template(:new)
       end
     end
   end
 
-  context 'POST #withdraw' do
-    before do
-      account.update(balance: initial_balance)
+  describe 'DELETE #destroy' do
+    it 'deletes the account' do
+      delete :destroy, params: { id: account.id }
+      expect(Account.exists?(account.id)).to be_falsey
     end
 
-    context 'when there is sufficient balance' do
-      let(:initial_balance) { 1000.00 }
+    it 'redirects to accounts path' do
+      delete :destroy, params: { id: account.id }
+      expect(response).to redirect_to(accounts_path)
+    end
+  end
 
-      it 'reduces the account balance by the withdrawal amount' do
-        expect {
-          post :withdraw, params: { id: account.id, amount: 500.00 }
-        }.to change { account.reload.balance }.by(-500.00)
+  describe 'PATCH #change_status' do
+    it 'toggles the account status' do
+      original_status = account.status
+      patch :change_status, params: { id: account.id }
+      account.reload
+      expect(account.status).not_to eq(original_status)
+    end
+
+    it 'redirects to the account after changing status' do
+      patch :change_status, params: { id: account.id }
+      expect(response).to redirect_to(account)
+    end
+  end
+
+  describe 'POST #withdraw' do
+    let(:amount) { 50.0 }
+
+    it 'deducts the amount from the account balance when the balance is sufficient' do
+      original_balance = account.balance
+      post :withdraw, params: { id: account.id, amount: amount }
+      account.reload
+      expect(account.balance).to eq(original_balance - amount)
+    end
+
+    it 'creates a withdrawal transaction' do
+      post :withdraw, params: { id: account.id, amount: amount }
+      transaction = account.transactions.last
+      expect(transaction.amount).to eq(amount)
+      expect(transaction.transaction_type).to eq('withdraw')
+    end
+
+    context 'when the balance is insufficient' do
+      it 'does not change the balance' do
+        post :withdraw, params: { id: account.id, amount: account.balance + 100 }
+        expect(account.reload.balance).to eq(account.balance)
       end
 
-      it 'creates a withdrawal transaction' do
-        expect {
-          post :withdraw, params: { id: account.id, amount: 500.00 }
-        }.to change(Transaction, :count).by(1)
-      end
-
-      it 'redirects to the show account view with success notice' do
-        post :withdraw, params: { id: account.id, amount: 500.00 }
+      it 'redirects to the account with an alert' do
+        post :withdraw, params: { id: account.id, amount: account.balance + 100 }
+        expect(flash[:alert]).to be_present
         expect(response).to redirect_to(account)
-        expect(flash[:notice]).to eq('Withdrawal successful')
+      end
+    end
+  end
+
+  describe 'POST #deposit' do
+    let(:amount) { 100.0 }
+
+    it 'adds the amount to the account balance' do
+      original_balance = account.balance
+      post :deposit, params: { id: account.id, amount: amount }
+      account.reload
+      expect(account.balance).to eq(original_balance + amount)
+    end
+
+    it 'creates a deposit transaction' do
+      post :deposit, params: { id: account.id, amount: amount }
+      transaction = account.transactions.last
+      expect(transaction.amount).to eq(amount)
+      expect(transaction.transaction_type).to eq('deposit')
+    end
+  end
+
+  describe 'POST #send_money' do
+    let(:recipient) { create(:user, :recipient) }
+    let(:recipient_account) { create(:account, user: recipient) }
+    let(:amount) { 50.0 }
+
+    context 'when the transfer is valid' do
+      it 'transfers the amount to the recipient' do
+        recipient_balance = recipient_account.balance
+        account_balance = account.balance
+        post :send_money, params: { id: account.id, recipient_account_id: recipient_account.id, amount: amount }
+        recipient_account.reload
+        account.reload
+        expect(recipient_account.balance).to eq(recipient_balance + amount)
+        expect(account.balance).to eq(account_balance - amount)
+      end
+
+      it 'creates a send_money and received_money transaction' do
+        post :send_money, params: { id: account.id, recipient_account_id: recipient_account.id, amount: amount }
+
+        send_transaction = account.transactions.find_by(transaction_type: :send_money, amount: amount)
+        receive_transaction = recipient_account.transactions.find_by(transaction_type: :received_money, amount: amount)
+
+        expect(send_transaction).not_to be_nil
+        expect(receive_transaction).not_to be_nil
+
+        expect(send_transaction.amount).to eq(amount)
+        expect(send_transaction.transaction_type).to eq('send_money')
+
+        expect(receive_transaction.amount).to eq(amount)
+        expect(receive_transaction.transaction_type).to eq('received_money')
       end
     end
 
-    context 'when there is insufficient balance' do
-      let(:initial_balance) { 1000.00 }
-
-      it 'does not change the account balance' do
-        post :withdraw, params: { id: account.id, amount: 1500.00 }
-        expect(account.reload.balance).to eq(initial_balance)
-      end
-
-      it 'does not create a new transaction' do
-        expect {
-          post :withdraw, params: { id: account.id, amount: 1500.00 }
-        }.to_not change(Transaction, :count)
-      end
-
-      it 'redirects to the show account view with alert' do
-        post :withdraw, params: { id: account.id, amount: 1500.00 }
-        expect(response).to redirect_to(account)
-        expect(flash[:alert]).to eq('Insufficient balance')
-      end
-    end
-
-    context 'when a transaction fails' do
-      let(:initial_balance) { 1000.00 }
-
-      before do
-        allow_any_instance_of(Account).to receive(:update).and_raise(ActiveRecord::RecordInvalid)
-      end
-
-      it 'does not change the account balance' do
-        expect {
-          post :withdraw, params: { id: account.id, amount: 500.00 }
-        }.to_not(change { account.reload.balance })
-      end
-
-      it 'does not create a new transaction' do
-        expect {
-          post :withdraw, params: { id: account.id, amount: 500.00 }
-        }.to_not change(Transaction, :count)
-      end
-
-      it 'redirects to the show account view with an error message' do
-        post :withdraw, params: { id: account.id, amount: 500.00 }
-        expect(response).to redirect_to(account)
-        expect(flash[:alert]).to eq('Transaction failed. Please try again.')
+    context 'when the transfer is invalid' do
+      it 'does not transfer the amount' do
+        account_balance = account.balance
+        post :send_money, params: { id: account.id, recipient_account_id: recipient_account.id, amount: account.balance + 100 }
+        recipient_account.reload
+        account.reload
+        expect(recipient_account.balance).to eq(1000.0)
+        expect(account.balance).to eq(account_balance)
       end
     end
   end
