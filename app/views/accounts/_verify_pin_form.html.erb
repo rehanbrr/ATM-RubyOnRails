@@ -1,0 +1,10 @@
+<%= form_with url: verify_pin_account_path(@account), method: :post, local: true do |form| %>
+  <div>
+    <%= form.label :pin, "Enter PIN" %><br>
+    <%= form.password_field :pin %>
+  </div>
+  <br>
+  <div>
+    <%= form.submit "Verify PIN" %>
+  </div>
+<% end %>

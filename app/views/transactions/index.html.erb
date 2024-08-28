@@ -1,0 +1,19 @@
+<h1>Transactions for Account <%= @account.id %></h1>
+<% if @transactions.any? %>
+  <table>
+    <thead>
+      <tr>
+        <th>Amount</th>
+        <th>Type</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+    <%= render @transactions %>
+    </tbody>
+  </table>
+<% else %>
+  <p>No transactions found.</p>
+<% end %>
+<br>
+<%= link_to 'Back', @account %> 
